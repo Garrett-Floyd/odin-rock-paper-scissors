@@ -11,3 +11,20 @@ function getComputerChoice(){
     }
     return choice
 }
+
+// get player's rock paper scissors choice
+function getHumanChoice(){
+    let keepGoing = true;
+    let choice = "";
+    while(keepGoing){
+        let userInput = prompt("type \"rock\", \"paper\", or \"scissors\" to make your rock paper scissors choice");
+        choice = userInput.toLowercase();
+        if (choice !== "rock" && choice !== "paper" && choice !== "scissors"){
+            console.log("invalid choice, try agian.")
+        }
+        else{
+            keepGoing = false
+        }
+    }
+    return choice
+}
