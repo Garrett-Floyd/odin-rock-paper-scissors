@@ -12,29 +12,6 @@ function getComputerChoice(){
     return choice;
 }
 
-// get player's rock paper scissors choice.
-function getHumanChoice(){
-    let keepGoing = true;
-    let choice = "";
-    while(keepGoing){
-        let userInput = prompt("type \"rock\", \"paper\", or \"scissors\" to make your rock paper scissors choice");
-        if (userInput !== null) {
-        choice = userInput.toLowerCase();
-        }
-        else{
-            choice = "null";
-        }
-
-        if (choice !== "rock" && choice !== "paper" && choice !== "scissors"){
-            console.log(choice + " is an invalid choice, try agian.");
-        }
-        else{
-            keepGoing = false;
-        }
-    }
-    return choice;
-}
-
 function convertChoiceToMod3(choice){
     let val = 0;
     if (choice === "rock") {
@@ -48,69 +25,100 @@ function convertChoiceToMod3(choice){
 }
 
 // determine the winner of the rock paper scissors game by using reasoning mod 3.
-function playRound(humanChoice,computerChoice){
+function playRound(event){
+    let winsBox = document.querySelector("#winsBox");
+    let wins = Number(winsBox.textContent);
+    let losesBox = document.querySelector("#losesBox");
+    let loses = Number(losesBox.textContent);
+
+    let humanChoice = event.target.id;
     const humanChoiceInt = convertChoiceToMod3(humanChoice);
+    let computerChoice = getComputerChoice();
     const computerChoiceInt = convertChoiceToMod3(computerChoice);
-    let roundOutcome = "";
+    let roundMsg = "";
 
+    let msgBox = document.querySelector("#msgBox");
     if (Math.round(humanChoiceInt % 3) === Math.round(computerChoiceInt % 3)) {
-        console.log("This round is a draw! You both choose " + humanChoice);
-        roundOutcome = "draw";        
+        msgBox.textContent = `This round is a draw! You both choose ${humanChoice}`;      
     } else if (Math.round((humanChoiceInt + 1) % 3) === Math.round(computerChoiceInt % 3)) {
-        console.log("You lose this round! " + computerChoice + " beats " + humanChoice);        
-        roundOutcome = "loss";
+        msgBox.textContent = `You lose this round! ${computerChoice} beats ${humanChoice}`;
+        ++loses;
     } else if (Math.round((humanChoiceInt + 2) % 3) === Math.round(computerChoiceInt % 3)) {
-        console.log("You win this round! " + humanChoice + " beats " + computerChoice);
-        roundOutcome = "win";        
+        msgBox.textContent = `You win this round! ${humanChoice} beats ${computerChoice}`;
+        ++wins;
     } else {
-        console.log("WARNING: Error detected in PlayRound function!");
+        msgBox.textContent = "WARNING: Error detected in PlayRound function!";
     }
-    
-    return roundOutcome;
+    winsBox.textContent = wins;
+    losesBox.textContent = loses;
+
+    let winsNeededVal = document.querySelector("#winsNeededVal");
+    let winsNeeded = Number(winsNeededVal.textContent);
+    if ( (wins === winsNeeded) || (loses === winsNeeded)){
+        let winsNeededBox = document.querySelector("#winsNeededBox");
+        let endGameEvent = new CustomEvent("endGameEvent");
+        winsNeededBox.addEventListener("endGameEvent",endGame);
+        winsNeededBox.dispatchEvent(endGameEvent);
+    }
 }
 
-function playGame(num_rounds){
-    let computerScore = 0;
-    let humanScore = 0;
+function endGame(event){
+    let winsNeededVal = document.querySelector("#winsNeededVal");
+    let winsNeeded = Number(winsNeededVal.textContent);
+    let winsBox = document.querySelector("#winsBox")
+    let wins = Number(winsBox.textContent);
+    winsBox.textContent = 0;
+    let losesBox = document.querySelector("#losesBox")
+    let loses = Number(losesBox.textContent);
+    losesBox.textContent = 0;
 
-    for (let round = 0; round < num_rounds; ++round){
-        if (round > 0) {
-            console.log("The current score is " + humanScore + " vs " + computerScore);   
-        }
-        const humanSelection = getHumanChoice();
-        const computerSelection = getComputerChoice();
-        const roundOutcome = playRound(humanSelection, computerSelection);
-        if  (roundOutcome === "loss"){
-            ++computerScore;
-        } else if (roundOutcome == "win"){
-            ++humanScore;
-        }        
-    }
-
-    console.log("The final score is " + humanScore + " vs " + computerScore); 
-    if (humanScore > computerScore) {
-        console.log("Congrats! You won the game");
-    } else if (humanScore < computerScore){
-        console.log("You lost the game.");
-    } else if (humanScore === computerScore){
-        console.log("The game is a draw.");
+    let msgBox = document.querySelector("#msgBox");
+    if (wins === winsNeeded) {
+        msgBox.textContent = "Congrats! You won the game";
+    } else if (loses === winsNeeded){
+        msgBox.textContent = "You lost the game.";
     } else {
-        console.log("WARNING: Error dectected in playGame function!");
+        msgBox.textContent = "WARNING: Error dectected in playGame function!";
+    }
+
+    let btncontainer = document.querySelector("#btncontainer");
+    btncontainer.removeEventListener("click",playRound);
+
+    let winsNeededTxt = document.querySelector("#winsNeededTxt");
+    winsNeededTxt.textContent = "Enter a number of round wins needed to win the game. Press enter to begin game:"
+    winsNeededVal.remove();
+    let usrInputBox= document.createElement("input");
+    usrInputBox.type = "text";
+    usrInputBox.id = "usrInputBox";
+    let winsNeededBox = document.querySelector("#winsNeededBox");
+    winsNeededBox.appendChild(usrInputBox);
+
+    document.addEventListener("keydown",beginGame);
+}
+
+function beginGame(){
+        if (event.key === "Enter"){
+            usrInputBox = document.querySelector("#usrInputBox");
+            if (Number.isInteger(Number(usrInputBox.value))) {
+                document.removeEventListener("keydown",beginGame);
+
+                let winsNeededTxt = document.querySelector("#winsNeededTxt");
+                winsNeededTxt.textContent = "Number of wins needed to claim victory:"
+                let winsNeededVal = document.createElement("div");
+                winsNeededVal.id = "winsNeededVal";
+                winsNeededVal.textContent = usrInputBox.value
+                usrInputBox.remove();
+                let winsNeededBox = document.querySelector("#winsNeededBox");
+                winsNeededBox.appendChild(winsNeededVal);
+
+                let btncontainer = document.querySelector("#btncontainer");
+                btncontainer.addEventListener("click",playRound);
+            }
+            else{
+                let msgBox = document.querySelector("#msgBox");
+                msgBox.textContent = "That is not a valid number of rounds. Please enter an integer.";
+            }            
     }
 }
 
-function main(){
-    keepGoing = true;
-    while (keepGoing) {
-        let num_rounds = prompt("how many rounds of rock paper scissors would you like to play?");
-        if (Number.isInteger(Number(num_rounds))) {
-            playGame(num_rounds);
-            keepGoing = false;          
-        }
-        else{
-            console.log("That is not a valid number of rounds. Please enter an integer.");
-        }
-    }
-}
-
-main();
+document.addEventListener("keydown",beginGame);
